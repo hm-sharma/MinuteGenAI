@@ -53,7 +53,9 @@ class GenerateRequest(BaseModel):
 @app.get("/api/health")
 async def health_check():
     api_key = os.getenv("GEMINI_API_KEY")
-    is_configured = api_key is not None and api_key != "YOUR_GEMINI_API_KEY_HERE" and api_key.strip() != ""
+    if api_key:
+        api_key = api_key.strip()
+    is_configured = api_key is not None and api_key != "YOUR_GEMINI_API_KEY_HERE" and api_key != ""
     return {
         "status": "active",
         "api_key_configured": is_configured
@@ -64,7 +66,9 @@ async def health_check():
 @app.post("/api/generate")
 async def generate_mom(payload: GenerateRequest):
     api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key or api_key == "YOUR_GEMINI_API_KEY_HERE" or api_key.strip() == "":
+    if api_key:
+        api_key = api_key.strip()
+    if not api_key or api_key == "YOUR_GEMINI_API_KEY_HERE" or api_key == "":
       raise HTTPException(
           status_code=status.HTTP_400_BAD_REQUEST,
           detail="Gemini API Key is unconfigured on the server. Please define GEMINI_API_KEY in the backend .env file."
