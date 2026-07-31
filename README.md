@@ -26,13 +26,15 @@ MinuteGenAI utilizes a robust **FastAPI** backend proxy to securely handle reque
 
 ```
 MinuteGenAI/
-├── main.py              # Secure FastAPI backend proxy
-├── gemini-api.js        # Frontend API service calling local backend
+├── api/
+│   └── index.py         # FastAPI app (runs as Vercel Serverless Function)
+├── gemini-api.js        # Frontend API service calling local/production backend
 ├── index.html           # Main frontend single-page application
 ├── styles.css           # Premium styling with Space Grotesk & Inter
 ├── app.js               # Frontend application state & UI controller
-├── config.js            # Frontend configuration (ports & API root)
+├── config.js            # Frontend configuration with auto-environment detection
 ├── samples.js           # Sandbox demo transcripts (Sprint planning, marketing)
+├── vercel.json          # Vercel deployment rewrite rules
 ├── .env                 # API keys (should be gitignored!)
 └── .gitignore           # File and folder ignore patterns
 ```
@@ -46,7 +48,7 @@ MinuteGenAI/
 - Node.js (for running the frontend dev server, optional but recommended)
 - A **Gemini API Key** from [Google AI Studio](https://aistudio.google.com/)
 
-### 1. Backend Setup
+### 1. Local Backend Setup
 1. Open your terminal in the project directory:
    ```bash
    cd MinuteGenAI
@@ -61,17 +63,31 @@ MinuteGenAI/
    ```
 4. Start the FastAPI backend:
    ```bash
-   uvicorn main:app --reload
+   uvicorn api.index:app --reload
    ```
-   The backend will start running at `http://localhost:8000`.
+   The backend will start running locally at `http://localhost:8000`.
 
-### 2. Frontend Setup
+### 2. Local Frontend Setup
 1. In a separate terminal tab, run the frontend development server:
    ```bash
    npm run dev
    ```
    This will host the static frontend on `http://localhost:3000`.
 2. Open your browser and navigate to `http://localhost:3000` to start compiling transcripts!
+
+---
+
+## Production Deployment on Vercel 🚀
+
+This project is fully configured to be deployed as a single application on Vercel (hosting both frontend static files and python serverless API endpoints).
+
+1. Push your project to a GitHub repository.
+2. In the Vercel Dashboard, import your repository.
+3. Keep the **Root Directory** as default (`.` / root directory).
+4. In the Vercel project settings, add an **Environment Variable**:
+   * **Key**: `GEMINI_API_KEY`
+   * **Value**: *[Your Google AI Studio API Key]*
+5. Click **Deploy**. Vercel will build the frontend assets and automatically compile the FastAPI serverless functions under the `/api` route.
 
 ---
 

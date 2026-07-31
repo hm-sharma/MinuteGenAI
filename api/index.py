@@ -19,7 +19,7 @@ app = FastAPI(
 # CORS Policy: Allow local static web client to interact securely
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust this to specific domains in production (e.g. ["http://localhost:3000"])
+    allow_origins=["*"],  # Adjust this to specific domains in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -68,9 +68,9 @@ async def generate_mom(payload: GenerateRequest):
         style_instruction = "Maintain a formal corporate tone. Balance summary details with clear bulleted takeaways and actionable owner assignments."
 
     metadata_context = f"""
-Meeting Title Suggestion: {payload.title or "Auto-detect"}
-Date Suggestion: {payload.date or "Auto-detect"}
-Platform Suggestion: {payload.platform or "Auto-detect"}
+    Meeting Title Suggestion: {payload.title or "Auto-detect"}
+    Date Suggestion: {payload.date or "Auto-detect"}
+    Platform Suggestion: {payload.platform or "Auto-detect"}
     """
 
     system_prompt = f"""You are a highly efficient meeting coordinator and AI administrative assistant.
