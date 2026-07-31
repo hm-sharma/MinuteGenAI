@@ -35,6 +35,7 @@ class GenerateRequest(BaseModel):
     date: Optional[str] = Field(None, description="Suggested meeting date.")
 
 # Health status endpoint (lets frontend verify configuration status)
+@app.get("/health")
 @app.get("/api/health")
 async def health_check():
     api_key = os.getenv("GEMINI_API_KEY")
@@ -45,6 +46,7 @@ async def health_check():
     }
 
 # Proxy compiler endpoint
+@app.post("/generate")
 @app.post("/api/generate")
 async def generate_mom(payload: GenerateRequest):
     api_key = os.getenv("GEMINI_API_KEY")
@@ -218,3 +220,7 @@ Return the output strictly matching the requested JSON schema. Do not wrap the J
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Failed to parse structured JSON from Gemini API response."
         )
+
+@app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE"])
+async def catch_all(path_name: str):
+    return {"error": "Not Found", "path_received": path_name}
