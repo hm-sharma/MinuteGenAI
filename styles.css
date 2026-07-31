@@ -1412,6 +1412,9 @@ textarea.form-input.code-font:focus {
     padding: 0 !important;
   }
   .view-panel {
+    display: none !important;
+  }
+  .view-panel.active {
     display: block !important;
   }
   .mom-brief-header-box, .report-section-box, .highlight-feed-item, .checklist-task-item {
