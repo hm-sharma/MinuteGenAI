@@ -12,7 +12,7 @@ window.GeminiMOMService = {
    * @returns {Promise<Object>} The structured MOM output.
    */
   async generateMOM({ transcript, model = "gemini-3.5-flash", style = "professional", metadata = {} }) {
-    const apiBaseUrl = window.CONFIG?.API_BASE_URL || "http://localhost:8000";
+    const apiBaseUrl = window.CONFIG?.API_BASE_URL ?? "http://localhost:8000";
     const endpoint = `${apiBaseUrl}/api/generate`;
 
     if (!transcript || transcript.trim().length < 50) {

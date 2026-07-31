@@ -130,7 +130,7 @@ window.App = {
     const indicator = document.getElementById('api-status-indicator');
     if (!indicator) return;
 
-    const apiBaseUrl = window.CONFIG?.API_BASE_URL || "http://localhost:8000";
+    const apiBaseUrl = window.CONFIG?.API_BASE_URL ?? "http://localhost:8000";
     
     try {
       const response = await fetch(`${apiBaseUrl}/api/health`);
@@ -316,7 +316,7 @@ window.App = {
   // Call FastAPI backend or fallback to Demo simulations
   async handleGenerationSubmit(event) {
     event.preventDefault();
-    const apiBaseUrl = window.CONFIG?.API_BASE_URL || "http://localhost:8000";
+    const apiBaseUrl = window.CONFIG?.API_BASE_URL ?? "http://localhost:8000";
 
     const transcript = document.getElementById('transcript-textarea').value.trim();
     const model = document.getElementById('ai-model-select').value;
