@@ -199,6 +199,8 @@ Return the output strictly matching the requested JSON schema. Do not wrap the J
                 except Exception:
                     error_msg = f"HTTP status code {response.status_code}"
                 
+                print(f"Gemini API returned error: Status={response.status_code}, Msg={error_msg}")
+
                 # Check for rate limiting / token exhaustion / invalid keys
                 if response.status_code == 429 or "quota" in error_msg.lower() or "limit" in error_msg.lower():
                     error_msg = "API key tokens exhausted or too many requests. Please try again later."
@@ -213,6 +215,7 @@ Return the output strictly matching the requested JSON schema. Do not wrap the J
                 )
 
             data = response.json()
+            print(f"Gemini response raw data: {data}")
             text_response = data["candidates"][0]["content"]["parts"][0]["text"]
             
             if not text_response:
@@ -225,14 +228,24 @@ Return the output strictly matching the requested JSON schema. Do not wrap the J
             return parsed_mom
 
     except httpx.RequestError as exc:
+        print(f"httpx.RequestError occurred: {exc}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Network error communicating with Gemini API: {exc}"
         )
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as exc:
+        print(f"json.JSONDecodeError occurred: {exc}. Text response was: {text_response}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Failed to parse structured JSON from Gemini API response."
+        )
+    except Exception as exc:
+        print(f"Unexpected Exception occurred: {exc}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal Server Error: {exc}"
         )
 
 @app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE"])
