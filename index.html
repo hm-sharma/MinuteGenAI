@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MinuteGenAI - Meeting Intelligence Instrument</title>
+  <meta name="description" content="A clean, modern-minimal developer tool to parse transcripts and compile Minutes of Meeting (MOM).">
+  
+  <!-- Fonts: Space Grotesk (headers), Inter (body), JetBrains Mono (labels/code) -->
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- Config and Marked Parser -->
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+  <!-- Top Navigation Header (Cobalt style, bordered) -->
+  <header class="nav-header">
+    <div class="nav-container">
+      <div class="logo-wrapper" onclick="window.App.switchView('dashboard')">
+        <div class="logo-badge">M</div>
+        <span class="logo-text">Minute<span>GenAI</span></span>
+      </div>
+
+      <nav class="top-nav-menu">
+        <a class="nav-link active" data-view="dashboard">Dashboard</a>
+        <a class="nav-link" data-view="generate">Generate MOM</a>
+        <a class="nav-link" data-view="history">Archives</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="search-trigger-btn" onclick="window.App.openCommandPalette()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <span>Search...</span>
+          <kbd>⌘K</kbd>
+        </button>
+        <button class="btn btn-primary" onclick="window.App.switchView('generate')">
+          New MOM
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Area -->
+  <main class="page-viewport">
+    
+    <!-- 1. Dashboard Panel -->
+    <section id="view-dashboard" class="view-panel active">
+      <div class="workbench-header">
+        <div class="workbench-title-group">
+          <span class="mono-label">OVERVIEW</span>
+          <h2 class="section-title">Meeting intelligence dashboard</h2>
+        </div>
+        <div class="key-status-row" id="api-status-indicator">
+          <!-- Populated by JS to check API Key status -->
+        </div>
+      </div>
+
+      <div class="dashboard-stats-grid">
+        <div class="metric-block">
+          <span class="mono-label">SUMMARIES</span>
+          <div class="metric-value" id="stat-total-meetings">0</div>
+          <span class="metric-meta">Compiled transcripts</span>
+        </div>
+
+        <div class="metric-block">
+          <span class="mono-label">TIME ESCAPED</span>
+          <div class="metric-value" id="stat-total-time">0h</div>
+          <span class="metric-meta">Drafting cycles saved</span>
+        </div>
+
+        <div class="metric-block">
+          <span class="mono-label">ACTIONS MET</span>
+          <div class="metric-value" id="stat-completed-actions">0</div>
+          <span class="metric-meta">Completed checklist items</span>
+        </div>
+
+        <div class="metric-block">
+          <span class="mono-label">ACTIONS PENDING</span>
+          <div class="metric-value" id="stat-pending-actions">0</div>
+          <span class="metric-meta">Awaiting follow-up tasks</span>
+        </div>
+      </div>
+
+      <!-- Hero Workbench Tour -->
+      <div class="workbench-hero">
+        <div class="hero-text-block">
+          <h3 class="hero-heading">Instant transcripts parsing</h3>
+          <p class="hero-paragraph">Drag and drop audio closed captions or raw transcripts. MinuteGenAI cleans timestamp arrays and generates structured summaries, task logs, and future calendar outlines instantly.</p>
+          <div class="hero-actions-row">
+            <button class="btn btn-primary" onclick="window.App.switchView('generate')">Parse Transcript</button>
+            <button class="btn btn-secondary" onclick="window.App.loadDemoPreset('sample-sprint-planning')">Load Sprint Demo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Archives -->
+      <div class="recent-records-section">
+        <h4 class="records-heading">Recent summaries</h4>
+        <div class="records-list" id="recent-meetings-list">
+          <!-- Populated via Javascript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Generate Panel -->
+    <section id="view-generate" class="view-panel">
+      <div class="workbench-header">
+        <div class="workbench-title-group">
+          <span class="mono-label">ADMINISTRATOR</span>
+          <h2 class="section-title">Analyze meeting transcript</h2>
+        </div>
+      </div>
+
+      <div class="generate-workbench-grid">
+        <!-- Input Column -->
+        <div class="panel-card">
+          <span class="mono-label card-top-label">INPUT TRANSCRIPT</span>
+          
+          <div class="upload-dropzone" id="transcript-dropzone">
+            <div class="drop-icon-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
+              </svg>
+            </div>
+            <div class="drop-text">
+              <strong>Select transcript</strong> or drag and drop VTT / SRT / TXT
+            </div>
+            <input type="file" id="transcript-file-input" style="display: none;" accept=".txt,.srt,.vtt">
+          </div>
+
+          <div id="selected-file-container" style="margin-bottom: 15px; display: none;"></div>
+
+          <div class="form-item">
+            <label for="transcript-textarea">Raw Text Input</label>
+            <textarea class="form-input code-font" id="transcript-textarea" placeholder="Paste meeting dialogue block here... (e.g. Alex: Hi, Clara: Hello)"></textarea>
+          </div>
+        </div>
+
+        <!-- Configurations Column -->
+        <div class="panel-card">
+          <span class="mono-label card-top-label">INSTRUMENT CONTROLS</span>
+          
+          <div style="margin-bottom: 25px;">
+            <span class="control-section-title">Sandbox Demo Presets</span>
+            <div class="chip-row">
+              <div class="action-chip" onclick="window.App.loadDemoPreset('sample-sprint-planning')">Sprint Planning</div>
+              <div class="action-chip" onclick="window.App.loadDemoPreset('sample-marketing-brainstorm')">Marketing Campaign</div>
+            </div>
+          </div>
+
+          <form id="generator-form" onsubmit="window.App.handleGenerationSubmit(event)">
+            <div class="form-item">
+              <label for="meeting-title-input">Meeting Title (Optional)</label>
+              <input type="text" class="form-input" id="meeting-title-input" placeholder="e.g. Architecture Alignment Sync">
+            </div>
+
+            <div class="split-controls-row">
+              <div class="form-item">
+                <label for="meeting-platform">Platform</label>
+                <select class="form-input" id="meeting-platform">
+                  <option value="Google Meet">Google Meet</option>
+                  <option value="Zoom">Zoom Video</option>
+                  <option value="Microsoft Teams">MS Teams</option>
+                  <option value="Slack Huddle">Slack Huddle</option>
+                  <option value="In-Person">In-Person</option>
+                </select>
+              </div>
+
+              <div class="form-item">
+                <label for="meeting-date">Date</label>
+                <input type="date" class="form-input" id="meeting-date">
+              </div>
+            </div>
+
+            <div class="form-item">
+              <label for="ai-model-select">AI Inference Model</label>
+              <select class="form-input" id="ai-model-select">
+                <option value="gemini-3.5-flash">Gemini 3.5 Flash (Fast, Recommended)</option>
+                <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Lite (Ultra-Fast)</option>
+                <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash Lite (Efficient)</option>
+              </select>
+            </div>
+
+            <div class="form-item">
+              <label for="mom-style-select">Summary Format Profile</label>
+              <select class="form-input" id="mom-style-select">
+                <option value="professional">Professional administrative brief</option>
+                <option value="action-oriented">Action-oriented task logs</option>
+                <option value="detailed">Exhaustive documentation</option>
+                <option value="concise">Minimalist bullet points</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 15px;">
+              Compile Minutes
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Viewer Panel -->
+    <section id="view-viewer" class="view-panel">
+      <div class="workbench-header">
+        <div class="workbench-title-group">
+          <span class="mono-label" id="viewer-platform-tag">MEETING DETAILS</span>
+          <h2 class="section-title" id="viewer-title-header">Minutes of Meeting</h2>
+        </div>
+        <div class="action-buttons-group">
+          <button class="btn btn-secondary" onclick="window.App.copyToClipboard('markdown')">
+            Copy MD
+          </button>
+          <button class="btn btn-secondary" onclick="window.App.copyToClipboard('email')">
+            Copy HTML
+          </button>
+          <button class="btn btn-primary" onclick="window.print()">
+            Print PDF
+          </button>
+        </div>
+      </div>
+
+      <div class="mom-viewer-container" id="mom-viewer-content">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- 4. History Panel -->
+    <section id="view-history" class="view-panel">
+      <div class="workbench-header">
+        <div class="workbench-title-group">
+          <span class="mono-label">ARCHIVES</span>
+          <h2 class="section-title">Stored meeting summaries</h2>
+        </div>
+        <button class="btn btn-danger" onclick="window.App.clearAllHistory()">
+          Erase All History
+        </button>
+      </div>
+
+      <div class="archive-search-bar-row">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" class="form-input" id="history-search-input" placeholder="Search archives..." oninput="window.App.renderHistoryList()">
+      </div>
+
+      <div class="archives-grid" id="history-grid-container">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ⌘K Command Palette Dialog Modal (Cobalt signature move) -->
+  <div class="cmd-palette-backdrop" id="cmd-palette" onclick="window.App.closeCommandPalette(event)">
+    <div class="cmd-palette-box" onclick="event.stopPropagation()">
+      <div class="cmd-search-wrapper">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="cmd-palette-input" placeholder="Search summaries, actions, or try 'sprint'..." oninput="window.App.handleCommandPaletteInput()">
+        <kbd onclick="window.App.closeCommandPalette()">ESC</kbd>
+      </div>
+      <div class="cmd-results-list" id="cmd-palette-results">
+        <!-- Results populated dynamically -->
+      </div>
+      <div class="cmd-palette-footer">
+        <span>Use <kbd>↑</kbd> <kbd>↓</kbd> keys to navigate. Press <kbd>Enter</kbd> to select.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Opaque Overlay Loader -->
+  <div class="system-loader-overlay" id="loading-overlay">
+    <div class="loader-content-box">
+      <div class="loader-bar-animation"></div>
+      <div class="loader-status" id="loader-status-text">Processing meeting text...</div>
+    </div>
+  </div>
+
+  <!-- Notification Toast Container -->
+  <div class="system-toast-container" id="toast-holder"></div>
+
+  <!-- Footer (Ft2 Inline single line) -->
+  <footer class="system-footer">
+    <div class="footer-container">
+      <div class="footer-left">
+        <span class="footer-wordmark">MinuteGenAI</span>
+        <span class="footer-separator">|</span>
+        <span class="footer-tagline">Meeting Intelligence Workspace</span>
+      </div>
+      <div class="footer-right">
+        <span>v1.0.0</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="samples.js"></script>
+  <script src="gemini-api.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
