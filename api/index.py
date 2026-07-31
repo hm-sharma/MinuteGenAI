@@ -16,6 +16,20 @@ app = FastAPI(
     version="1.0.0"
 )
 
+class VercelPathMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            for header, val in scope.get("headers", []):
+                if header == b"x-matched-path":
+                    scope["path"] = val.decode("utf-8")
+                    break
+        await self.app(scope, receive, send)
+
+app.add_middleware(VercelPathMiddleware)
+
 # CORS Policy: Allow local static web client to interact securely
 app.add_middleware(
     CORSMiddleware,
