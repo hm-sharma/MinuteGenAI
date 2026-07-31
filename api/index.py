@@ -189,7 +189,7 @@ Return the output strictly matching the requested JSON schema. Do not wrap the J
     }
 
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(endpoint, json=request_body)
             
             if response.status_code != 200:
