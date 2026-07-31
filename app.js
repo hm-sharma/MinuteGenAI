@@ -273,14 +273,15 @@ window.App = {
 
   // Calculate overview metrics
   updateDashboardStats() {
-    const totalMeetings = this.state.history.length;
+    const nonDemoHistory = this.state.history.filter(item => !item.isDemo);
+    const totalMeetings = nonDemoHistory.length;
     document.getElementById('stat-total-meetings').innerText = totalMeetings;
 
     let totalMins = 0;
     let completed = 0;
     let pending = 0;
 
-    this.state.history.forEach(item => {
+    nonDemoHistory.forEach(item => {
       const numMatch = item.duration ? item.duration.match(/\d+/) : null;
       totalMins += numMatch ? parseInt(numMatch[0]) : 40;
 
@@ -307,6 +308,7 @@ window.App = {
     setTimeout(() => {
       this.hideLoader();
       const cloned = JSON.parse(JSON.stringify(sample.mom));
+      cloned.isDemo = true; // Mark as demo to exclude from dashboard metrics
       const record = this.saveMOMToHistory(cloned);
       this.viewMOM(record.id);
       this.showToast(`Loaded preset demo`, "success");
